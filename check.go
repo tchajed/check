@@ -834,7 +834,7 @@ func (runner *suiteRunner) checkFixtureArgs() bool {
 }
 
 func (runner *suiteRunner) reportCallStarted(c *C) {
-	runner.output.WriteCallStarted("START", c)
+	runner.output.WriteCallStarted("=== RUN", c)
 }
 
 func (runner *suiteRunner) reportCallDone(c *C) {
@@ -844,22 +844,22 @@ func (runner *suiteRunner) reportCallDone(c *C) {
 		if c.mustFail {
 			runner.output.WriteCallSuccess("FAIL EXPECTED", c)
 		} else {
-			runner.output.WriteCallSuccess("PASS", c)
+			runner.output.WriteCallSuccess("--- PASS", c)
 		}
 	case skippedSt:
-		runner.output.WriteCallSuccess("SKIP", c)
+		runner.output.WriteCallSuccess("--- SKIP", c)
 	case failedSt:
-		runner.output.WriteCallProblem("FAIL", c)
+		runner.output.WriteCallProblem("--- FAIL", c)
 	case panickedSt:
-		runner.output.WriteCallProblem("PANIC", c)
+		runner.output.WriteCallProblem("--- FAIL", c)
 	case fixturePanickedSt:
 		// That's a testKd call reporting that its fixture
 		// has panicked. The fixture call which caused the
 		// panic itself was tracked above. We'll report to
 		// aid debugging.
-		runner.output.WriteCallProblem("PANIC", c)
+		runner.output.WriteCallProblem("--- PANIC", c)
 	case missedSt:
-		runner.output.WriteCallSuccess("MISS", c)
+		runner.output.WriteCallSuccess("--- MISS", c)
 	}
 }
 
@@ -918,9 +918,9 @@ func (ow *outputWriter) WriteCallSuccess(label string, c *C) {
 			suffix = " (" + c.reason + ")"
 		}
 		if c.status == succeededSt {
-			suffix += "\t" + c.timerString()
+			suffix += " (" + c.timerString()
 		}
-		suffix += "\n"
+		suffix += ")"
 		if ow.Stream {
 			suffix += "\n"
 		}
@@ -940,6 +940,10 @@ func (ow *outputWriter) WriteCallSuccess(label string, c *C) {
 
 func renderCallHeader(label string, c *C, prefix, suffix string) string {
 	pc := c.method.PC()
-	return fmt.Sprintf("%s%s: %s: %s%s", prefix, label, niceFuncPath(pc),
+	colon := ""
+	if label != "=== RUN" {
+		colon = ":"
+	}
+	return fmt.Sprintf("%s%s%s %s%s", prefix, label, colon,
 		niceFuncName(pc), suffix)
 }
